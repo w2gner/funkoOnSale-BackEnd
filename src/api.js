@@ -1,114 +1,30 @@
-import fetch from 'node-fetch';
-import express, { response } from 'express';
-import insertUser from './mongoDB.js';
-// import mongoose from 'mongoose';
-
-mongoose.connect("mongodb://localhost:27017");
-mongoose.connection.on("connected", function () {
-    console.log("Conectou ao banco")
-});
+const express = require('express');
+const insert = require('./database/insert');
+const select = require('./database/select');
 
 let app = express();
+app.use(express.json());
 
-app.get('/heroes', function (req, res, next) {
-    let request = fetch("https://akabab.github.io/superhero-api/api/all.json")
-    let heroName = req.query.name;
-    let found = false;
-
-    request.then(function (response) {
-        if (heroName) {
-            return response.json().then(function (data) {
-                let hero = data.find(function (hero) {
-                    if (hero.name === heroName && !found) {
-                        res.json(hero);
-                        found = true;
-                        request.finally(console.log("Herói encontrado"));
-                    }
-                });
-                if (hero == undefined && !found) {
-                    res.status(404).json({
-                        error: "Herói não encontrado"
-                    });
-                }
-            });
-        }
-        else {
-            return response.json().then(function (data) {
-                res.json(data);
-            });
-        }
-    })
+app.get('/users', function (req, res, next) {
+    let users = select();
+    res.status(200).json(users != undefined ? { Users: users } : { Users: "Não há usuários cadastrados" });
 });
 
-app.get('/occupation', function (req, res, next) {
-    let request = fetch("https://akabab.github.io/superhero-api/api/all.json")
-    let heroName = req.query.name;
-    let found = false;
-
-    request.then(function (response) {
-        if (heroName) {
-            return response.json().then(function (data) {
-                let hero = data.find(function (hero) {
-                    if (hero.name === heroName && !found) {
-                        res.json(hero.work.occupation);
-                        found = true;
-                        request.finally(console.log("Herói encontrado"));
-                    }
-                });
-                if (hero == undefined && !found) {
-                    res.status(404).json({
-                        error: "Herói não encontrado"
-                    });
-                }
-            });
-        }
-        else {
-            return response.json().then(function (data) {
-                res.json(data);
-            });
-        }
-    })
+app.post('/users', function (req, res, next) {
+    insert(req);
+    res.status(200).json({ sucesso: "Usuário registrado" });
 });
 
-app.get('/images', function (req, res, next) {
-    let request = fetch("https://akabab.github.io/superhero-api/api/all.json")
-    let heroName = req.query.name;
-    let found = false;
-
-    request.then(function (data) {
-        if (heroName) {
-            return data.json().then(function (data) {
-                let hero = data.find(function (hero) {
-                    if (hero.name === heroName && !found) {
-                        res.json(hero.images.lg);
-                        found = true;
-                        //buscar uma forma de encerrar a promise do request
-                        request.finally(console.log("Herói encontrado"));
-                    }
-                });
-                if (hero == undefined && !found) {
-                    res.status(404).json({
-                        error: "Herói não encontrado"
-                    });
-                }
-            });
-        } else if (heroName != undefined) {
-            res.status(404).json({
-                error: "Herói não encontrado"
-            });
-        } else {
-            res.status(404).json({
-                error: "Envie o parâmetro 'name'"
-            });
-        }
-    })
+app.put('/users', function (req, res, next) {
+    res.status(200).json({ sucesso: select() });
 });
+
 
 app.post('/login', function (req, res, next) {
     let root = "root";
     let rootPassword = "unesc@1234";
-    let email = req.headers.email;
-    let password = req.headers.password;
+    let email = req.body.email;
+    let password = req.body.password;
 
     if (!email || !password) {
         if (!email && !password) {
@@ -134,43 +50,6 @@ app.post('/login', function (req, res, next) {
     }
 });
 
-app.post('/register', function (req, res, next) {
-    const name = req.headers.name;
-    const user = req.headers.user;
-
-    insertUser(name, user);
-    res.status(200).json({ sucesso: "Usuário registrado" });
-});
-
 app.listen(4000, function () {
     console.log('Server started on port 4000');
 });
-
-function insertUser(name, user) {
-    const password = "teste123"
-
-    var funkoSchema = new mongoose.Schema({
-        nome: String,
-        user: String,
-        senha: String,
-        funkos: [{ id: Number, descricao: String, valor: Number, url: String, sale: Boolean }],
-        date: { type: Date, default: Date.now }
-    });
-    var funko = mongoose.model("funko", funkoSchema);
-
-    var post = new funko({
-        nome: name,
-        user: user,
-        senha: password,
-        funkos: [
-            { id: 1, descricao: "String", valor: 15.5, url: "teste", sale: true },
-            { id: 2, descricao: "String", valor: 15.5, url: "teste", sale: true }
-        ],
-    });
-
-    post.save(function (err) {
-        if (!err) {
-            console.log("Objeto salvo com sucesso!");
-        }
-    });
-}
