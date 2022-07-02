@@ -1,5 +1,12 @@
 import fetch from 'node-fetch';
-import express from 'express';
+import express, { response } from 'express';
+import insertUser from './mongoDB.js';
+// import mongoose from 'mongoose';
+
+mongoose.connect("mongodb://localhost:27017");
+mongoose.connection.on("connected", function () {
+    console.log("Conectou ao banco")
+});
 
 let app = express();
 
@@ -100,8 +107,8 @@ app.get('/images', function (req, res, next) {
 app.post('/login', function (req, res, next) {
     let root = "root";
     let rootPassword = "unesc@1234";
-    let email = req.query.email;
-    let password = req.query.password;
+    let email = req.headers.email;
+    let password = req.headers.password;
 
     if (!email || !password) {
         if (!email && !password) {
@@ -119,7 +126,7 @@ app.post('/login', function (req, res, next) {
             })
         }
     }
-    else if (req.query.email == root & req.query.password == rootPassword) {
+    else if (req.headers.email == root & req.headers.password == rootPassword) {
         res.status(200).json({ sucesso: "Usuário logado" });
     }
     else {
@@ -127,6 +134,43 @@ app.post('/login', function (req, res, next) {
     }
 });
 
+app.post('/register', function (req, res, next) {
+    const name = req.headers.name;
+    const user = req.headers.user;
+
+    insertUser(name, user);
+    res.status(200).json({ sucesso: "Usuário registrado" });
+});
+
 app.listen(4000, function () {
     console.log('Server started on port 4000');
 });
+
+function insertUser(name, user) {
+    const password = "teste123"
+
+    var funkoSchema = new mongoose.Schema({
+        nome: String,
+        user: String,
+        senha: String,
+        funkos: [{ id: Number, descricao: String, valor: Number, url: String, sale: Boolean }],
+        date: { type: Date, default: Date.now }
+    });
+    var funko = mongoose.model("funko", funkoSchema);
+
+    var post = new funko({
+        nome: name,
+        user: user,
+        senha: password,
+        funkos: [
+            { id: 1, descricao: "String", valor: 15.5, url: "teste", sale: true },
+            { id: 2, descricao: "String", valor: 15.5, url: "teste", sale: true }
+        ],
+    });
+
+    post.save(function (err) {
+        if (!err) {
+            console.log("Objeto salvo com sucesso!");
+        }
+    });
+}

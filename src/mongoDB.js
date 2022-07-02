@@ -1,28 +1,38 @@
 const mongoose = require("mongoose")
 mongoose.connect("mongodb://localhost:27017");
 
-mongoose.connection.on("connected", function () {
-    console.log("Conectou ao banco")
-});
+function insertUser(name, user) {
+    const password = "teste123"
 
-var blogShema = new mongoose.Schema({
-    title: String,
-    author: String,
-    body: String,
-    comments: [{ body: String, date: Date, default: [] }],
-    date: { type: Date, default: Date.now }
-});
+    mongoose.connection.on("connected", function () {
+        console.log("Conectou ao banco")
+    });
 
-var Blog = mongoose.model("Blog", blogShema);
+    var funkoSchema = new mongoose.Schema({
+        nome: String,
+        user: String,
+        senha: String,
+        funkos: [{ id: Number, descricao: String, valor: Number, url: String, sale: Boolean }],
+        date: { type: Date, default: Date.now }
+    });
+    
+    var funko = mongoose.model("funko", funkoSchema);
 
-var post = new Blog({
-    title: "Olá!",
-    author: "Wagner Ghedin",
-    body: "Seja bem vindo",
-});
+    var post = new funko({
+        nome: name,
+        user: user,
+        senha: password,
+        funkos: [
+            { id: 1, descricao: "String", valor: 15.5, url: "teste", sale: true },
+            { id: 2, descricao: "String", valor: 15.5, url: "teste", sale: true }
+        ],
+    });
 
-post.save(function (err) {
-    if (!err) {
-        console.log("Objeto salvo com sucesso!");
-    }
-});
+    post.save(function (err) {
+        if (!err) {
+            console.log("Objeto salvo com sucesso!");
+        }
+    });
+}
+
+export default insertUser;
