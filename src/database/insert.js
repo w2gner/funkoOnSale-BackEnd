@@ -6,27 +6,46 @@ module.exports = async function insert(req, callback) {
   let { name, user, password } = req.body;
   let { id, description, value, url, sale } = req.body.funkos[0];
 
-  let new_user = new User({
-    name: name,
-    user: user,
-    password: password,
-    funkos: [
-      {
-        id: id,
-        description: description,
-        value: value,
-        url: url,
-        sale: sale
-      }]
-  });
+  let
+    query = { user: user },
+    update = {
+      updatedAt: new Date(),
+      name: name,
+      user: user,
+      password: password,
+      funkos: [{ id: id, description: description, value: value, url: url, sale: sale }]
+    },
+    options = { upsert: true, multi: true };
 
-  new_user.save(function (error) {
-    mongoose.connection.close();
-    if (error) {
-      console.log(err);
-    } else {
-      callback(new_user);
-      console.log('Usuário salvo com sucesso', new_user);
+  let
+    new_user = new User({
+      name: name,
+      user: user,
+      password: password,
+      funkos: [
+        {
+          id: id,
+          description: description,
+          value: value,
+          url: url,
+          sale: sale
+        }]
+    });
+
+  User.findOneAndUpdate(query, update, options, function (error, result) {
+    if (!error) {
+      if (!result) {
+        result = new_user;
+      }
+      result.save(function (error) {
+        if (error) {
+          console.log(error);
+          callback(null);
+        } else {
+          callback(result);
+          console.log('Usuário salvo com sucesso', result);
+        }
+      });
     }
   });
 }
