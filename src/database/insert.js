@@ -1,45 +1,32 @@
-var mongoose = require('mongoose');
-var User = require('./userModel.js');
+const mongoose = require('mongoose');
+const User = require('./userModel.js');
 
-module.exports = function insert(req) {
-  mongoose.connect('mongodb://localhost:27017/funkodb');
-  var new_user = new User({
-    name: req.body.name,
-    user: req.body.user,
-    password: req.body.password,
-    // funkos: [getFunkos(req).forEach.toString()]
-    funkos: [{ id: req.body.funkos[0].id, description: req.body.funkos[0].description, value: 1, url: "String", sale: false }]
-    // funkos: [req.body.funkos.forEach(funko => {
-    //   return {
-    //     id: funko.id,
-    //     description: funko.description,
-    //     value: funko.value,
-    //     url: funko.url,
-    //     sale: funko.sale
-    //   }
-    // })]
+module.exports = async function insert(req, callback) {
+  await mongoose.connect('mongodb://localhost:27017/funkodb');
+  let { name, user, password } = req.body;
+  let { id, description, value, url, sale } = req.body.funkos[0];
+
+  let new_user = new User({
+    name: name,
+    user: user,
+    password: password,
+    funkos: [
+      {
+        id: id,
+        description: description,
+        value: value,
+        url: url,
+        sale: sale
+      }]
   });
 
-  console.log(new_user);
-  new_user.save(function (err) {
-    if (err) console.log(err);
+  new_user.save(function (error) {
+    mongoose.connection.close();
+    if (error) {
+      console.log(err);
+    } else {
+      callback(new_user);
+      console.log('Usuário salvo com sucesso', new_user);
+    }
   });
 }
-
-function getFunkos(req) {
-  let funko = new Array();
-  req.body.funkos.forEach(req => {
-    funko.push({
-      id: req.id,
-      description: req.description,
-      value: req.value,
-      url: req.url,
-      sale: req.sale
-    })
-  });
-  return [funko.array.forEach(x => {
-    funko.at(x);
-  })];
-}
-
-//{ id: Number, descricao: String, valor: Number, url: String, sale: Boolean }

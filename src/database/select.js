@@ -1,15 +1,15 @@
-var mongoose = require('mongoose');
-var User = require('./userModel.js');
+const mongoose = require('mongoose');
+const Users = require('./userModel.js');
 
-module.exports = function select() {
-    var db = mongoose.createConnection('mongodb://localhost:27017/funko');
-    db.on('error', console.error.bind(console, 'connection error:'));
-    var a1 = db.once('open', function () {
-        User.find({}, {}, function (err, users) {
+module.exports = async function select(callback) {
+    await mongoose.connect('mongodb://localhost:27017/funkodb');
+
+    Users.find({ user: "Wagner" }, function (error, data) {
+        if (error) {
+            console.log(error);
+        } else {
             mongoose.connection.close();
-            console.log("Usuários salvos: " + JSON.stringify(users))
-            return JSON.stringify(users);
-        })
+            callback(data);
+        }
     });
-
 }

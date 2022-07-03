@@ -6,13 +6,23 @@ let app = express();
 app.use(express.json());
 
 app.get('/users', function (req, res, next) {
-    let users = select();
-    res.status(200).json(users != undefined ? { Users: users } : { Users: "Não há usuários cadastrados" });
+    select(function (data) {
+        if (data) {
+            res.status(200).json(data)
+        } else {
+            res.status(404).json("Nenhuma informação encontrada");
+        }
+    });
 });
 
 app.post('/users', function (req, res, next) {
-    insert(req);
-    res.status(200).json({ sucesso: "Usuário registrado" });
+    insert(req, function (data) {
+        if (data) {
+            res.status(200).json(data)
+        } else {
+            res.status(500).json("Ocorreu erro ao salvar o usuário");
+        }
+    });
 });
 
 app.put('/users', function (req, res, next) {
@@ -42,7 +52,7 @@ app.post('/login', function (req, res, next) {
             })
         }
     }
-    else if (req.headers.email == root & req.headers.password == rootPassword) {
+    else if (email == root & password == rootPassword) {
         res.status(200).json({ sucesso: "Usuário logado" });
     }
     else {
