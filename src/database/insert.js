@@ -48,4 +48,12 @@ module.exports = async function insert(req, callback) {
       });
     }
   });
+
+  User.find(query, function (error, result) {
+    if (error) {
+      console.log(error);
+    } else if (result.length > 1) {
+      User.deleteOne(query, function (error) { })
+    }
+  });
 }
