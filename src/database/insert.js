@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { findOneAndUpdate } = require('./userModel.js');
 const User = require('./userModel.js');
 
 module.exports = async function insert(req, callback) {
@@ -56,4 +57,11 @@ module.exports = async function insert(req, callback) {
       User.deleteOne(query, function (error) { })
     }
   });
+
+  var teste = new Array();
+  req.body.funkos.forEach(funko => {
+    teste.push(funko);
+  });
+
+  User.updateMany(query, { $set: { funkos: teste } }, function (error, result) { });
 }
