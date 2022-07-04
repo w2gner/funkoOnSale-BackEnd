@@ -5,7 +5,10 @@ const User = require('./userModel.js');
 module.exports = async function insert(req, callback) {
   await mongoose.connect('mongodb://localhost:27017/funkodb');
   let { name, user, password } = req.body;
-  let { id, description, value, url, sale } = req.body.funkos[0];
+  let funkos = new Array();
+  req.body.funkos.forEach(funko => {
+    funkos.push(funko);
+  });
 
   let
     query = { user: user },
@@ -14,7 +17,7 @@ module.exports = async function insert(req, callback) {
       name: name,
       user: user,
       password: password,
-      funkos: [{ id: id, description: description, value: value, url: url, sale: sale }]
+      funkos: funkos
     },
     options = { upsert: true, multi: true };
 
@@ -23,14 +26,7 @@ module.exports = async function insert(req, callback) {
       name: name,
       user: user,
       password: password,
-      funkos: [
-        {
-          id: id,
-          description: description,
-          value: value,
-          url: url,
-          sale: sale
-        }]
+      funkos: funkos
     });
 
   User.findOneAndUpdate(query, update, options, function (error, result) {
@@ -58,10 +54,5 @@ module.exports = async function insert(req, callback) {
     }
   });
 
-  var teste = new Array();
-  req.body.funkos.forEach(funko => {
-    teste.push(funko);
-  });
-
-  User.updateMany(query, { $set: { funkos: teste } }, function (error, result) { });
+  User.updateMany(query, { $set: { funkos: funkos } }, function (error, result) { });
 }
